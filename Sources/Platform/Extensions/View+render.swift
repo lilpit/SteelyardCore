@@ -66,7 +66,7 @@ extension View {
     }
 
     public func saveImage(to url: URL? = nil, atSize size: CGSize? = nil) async throws -> URL {
-        try await fileURL(from: url, withExtension: "png")..{
+      try await url.fileURL(withExtension: "png")..{
             guard let destination = CGImageDestinationCreateWithURL($0 as CFURL, UTType.png.identifier as CFString, 1, nil) else {
                 throw RenderingError.diskWrite(url: $0)
             }
@@ -78,7 +78,7 @@ extension View {
     }
 
     public func savePDF(to url: URL? = nil, atSize size: CGSize? = nil) async throws -> URL {
-        try await fileURL(from: url, withExtension: "pdf")..{ url in
+      try await url.fileURL(withExtension: "pdf")..{ url in
             await ViewRenderer(content: resized(to: size)).imageRenderer..{ renderer in
                 renderer.render { size, context in
                     var box = CGRect(x: 0, y: 0, width: size.width, height: size.height)
@@ -95,16 +95,6 @@ extension View {
             }
         }
     }
-
-    // MARK: Private
-
-    private func fileURL(from url: URL?, withExtension extension: String) -> URL {
-        url ?? FileManager.default
-            .temporaryDirectory
-            .appendingPathComponent(Dependency(\.uuid).wrappedValue().uuidString)
-            .appendingPathExtension(`extension`)
-    }
-
 }
 
 extension View {
@@ -116,4 +106,13 @@ extension View {
             AnyView(self)
         }
     }
+}
+
+public extension URL? {
+  func fileURL(withExtension extension: String) -> URL {
+      self ?? FileManager.default
+          .temporaryDirectory
+          .appendingPathComponent(Dependency(\.uuid).wrappedValue().uuidString)
+          .appendingPathExtension(`extension`)
+  }
 }

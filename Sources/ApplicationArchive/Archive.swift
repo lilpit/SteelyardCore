@@ -7,11 +7,11 @@ import Foundation
 import Platform
 import Zip
 
-public struct Archive: Sendable, Identifiable, Equatable {
+public struct Archive: Sendable, Identifiable, Equatable, Codable {
 
     // MARK: Lifecycle
 
-    public init(from url: URL, isCompressed: Bool = true) async throws {
+    public init(from url: URL, isCompressed: Bool = true, allowedNodeCategories: Set<ArchiveNodeCategory>? = nil) async throws {
         let archiveURL: URL
 
         if isCompressed {
@@ -28,16 +28,17 @@ public struct Archive: Sendable, Identifiable, Equatable {
 
         let root = try await ArchiveNode(from: archiveURL)
 
-        self = .init(url: url, root: root)
+        self = .init(url: url, root: root, allowedNodeCategories: allowedNodeCategories)
     }
 
     private init(
         url: URL,
-        root: ArchiveNode
+        root: ArchiveNode,
+        allowedNodeCategories: Set<ArchiveNodeCategory>? = nil
     ) {
         self.url = url
         self.root = root
-        apps = root.findApps()
+        apps = root.findApps(allowedNodeCategories: allowedNodeCategories)
         duplicates = root.findDuplicates()
         parents = root.buildParentIndex()
     }

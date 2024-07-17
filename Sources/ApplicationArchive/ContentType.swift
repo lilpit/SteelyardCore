@@ -7,7 +7,7 @@ import UniformTypeIdentifiers
 
 // MARK: - ContentType
 
-enum ContentType: Sendable, Equatable, CustomStringConvertible {
+enum ContentType: Sendable, Equatable, CustomStringConvertible, Codable {
     case asset
     case binary(BinaryFileType)
     case binarySection
@@ -16,7 +16,7 @@ enum ContentType: Sendable, Equatable, CustomStringConvertible {
 
     // MARK: Internal
 
-    enum PackageExtension: String, Equatable, CustomStringConvertible {
+    enum PackageExtension: String, Equatable, CustomStringConvertible, Codable {
         case app
         case appex
         case bundle

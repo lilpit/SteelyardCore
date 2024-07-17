@@ -8,7 +8,7 @@ import Platform
 
 // MARK: - ArchiveNode
 
-public struct ArchiveNode: Sendable, Identifiable, Equatable {
+public struct ArchiveNode: Sendable, Identifiable, Equatable, Codable {
 
     // MARK: Lifecycle
 
@@ -52,6 +52,32 @@ public struct ArchiveNode: Sendable, Identifiable, Equatable {
         )
     }
 
+  init(url: URL, name: String, sizeInBytes: Int, checksum: Checksum?, metadata: ArchiveNodeMetadata?, children: [ArchiveNode], category: ArchiveNodeCategory) {
+    self.url = url
+    self.name = name
+    self.sizeInBytes = sizeInBytes
+    self.checksum = checksum
+    self.metadata = metadata
+    self.children = children
+    self.category = category
+  }
+
+  func filteredByCategories(allowedCategories: Set<ArchiveNodeCategory>) -> ArchiveNode? {
+    guard allowedCategories.contains(category) else {
+      return nil
+    }
+
+    let filteredChildren = children.compactMap { $0.filteredByCategories(allowedCategories: allowedCategories) }
+
+    return ArchiveNode(url: url,
+                       name: name,
+                       sizeInBytes: sizeInBytes,
+                       checksum: checksum,
+                       metadata: metadata,
+                       children: filteredChildren,
+                       category: category)
+  }
+
     // MARK: Public
 
     public typealias Checksum = String
@@ -59,8 +85,8 @@ public struct ArchiveNode: Sendable, Identifiable, Equatable {
     public let url: URL
     public let name: String
     public let sizeInBytes: Int
-    public let checksum: Checksum?
-    public let metadata: ArchiveNodeMetadata?
+    @NotCoded public private(set) var checksum: Checksum?
+    @NotCoded public private(set) var metadata: ArchiveNodeMetadata?
     public let children: [ArchiveNode]
     public let category: ArchiveNodeCategory
 
@@ -82,10 +108,10 @@ public struct ArchiveNode: Sendable, Identifiable, Equatable {
 
     // MARK: Internal
 
-    func findApps() -> [ArchiveApp] {
+  func findApps(allowedNodeCategories: Set<ArchiveNodeCategory>? = nil) -> [ArchiveApp] {
         children
-            .reduce(category == .app ? [ArchiveApp(self)].compactMap { $0 } : []) { result, child in
-                result + child.findApps()
+            .reduce(category == .app ? [ArchiveApp(self, allowedNodeCategories: allowedNodeCategories)].compactMap { $0 } : []) { result, child in
+                result + child.findApps(allowedNodeCategories: allowedNodeCategories)
             }
     }
 

@@ -6,7 +6,7 @@ import Foundation
 
 // MARK: - BinaryFileType
 
-public enum BinaryFileType: Sendable {
+public enum BinaryFileType: Sendable, Codable {
     case machO
     case elf
     case windowsPE
